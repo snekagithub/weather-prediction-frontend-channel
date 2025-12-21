@@ -119,9 +119,15 @@ export async function get<T>(path: string): Promise<T> {
   }
 
   const url = `${API_BASE}${path}`;
+  const headers = {
+          "content-type": "application/json",
+          "transactionid": crypto.randomUUID(),
+          "x-client-id": "weather-prediction-manager-ui-channel",
+          "x-client-secret": "WX-APP-2025"
+      };
 
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { headers });
 
     // success
     if (res.ok) {
