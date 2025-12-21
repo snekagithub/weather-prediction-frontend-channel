@@ -196,7 +196,12 @@ export async function post<T>(path: string, body: any): Promise<T> {
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+          "content-type": "application/json",
+          "transactionid": crypto.randomUUID(),
+          "x-client-id": "weather-prediction-manager-ui-channel",
+          "x-client-secret": "WX-APP-2025"
+      },
       body: JSON.stringify(body),
     });
 
