@@ -6,6 +6,19 @@ import type {
   ForecastUI,
 } from "../types";
 
+const SLOT_HOURS = 3;
+
+function pad2(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+function getThreeHourSlotKey(now = new Date()): string {
+  const slotStart = Math.floor(now.getHours() / SLOT_HOURS) * SLOT_HOURS;
+  return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(
+    now.getDate()
+  )}-${pad2(slotStart)}`;
+}
+
 function toUI(block: WeatherBlock): ForecastDayUI {
   return {
     date: block.date,
@@ -32,7 +45,9 @@ function toUI(block: WeatherBlock): ForecastDayUI {
 export async function getForecast(city: string): Promise<ForecastUI> {
   const trimmed = city.trim();
   const encoded = encodeURIComponent(trimmed);
-  const data = await get<ForecastResponse>(`/weather/${encoded}`);
+  const data = await get<ForecastResponse>(`/weather/${encoded}`, {
+    cacheKey: getThreeHourSlotKey(),
+  });
 
   const all = data.days.map(toUI);
   const today = all;
