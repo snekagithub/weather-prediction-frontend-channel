@@ -4,6 +4,7 @@ type CacheEntry<T = any> = {
   timestamp: number;    // when stored in memory cache
   data: T;
   fetchedAt: string;    // formatted time label
+  cacheKey: string | null;
 };
 
 const memoryCache = new Map<string, CacheEntry>();
@@ -11,6 +12,10 @@ const memoryCache = new Map<string, CacheEntry>();
 const LS_PREFIX = "weather_cache:";
 const CACHE_TTL = 5 * 60 * 1000; // 5 min
 const LS_TTL = 60 * 60 * 1000;   // 1 hour
+
+type GetOptions = {
+  cacheKey?: string | null;
+};
 
 let lastFetchTime: string | null = null;
 export function getLastFetchTime() {
@@ -108,11 +113,13 @@ async function parseErrorBody(
   }
 }
 
-export async function get<T>(path: string): Promise<T> {
+export async function get<T>(path: string, options: GetOptions = {}): Promise<T> {
   const now = Date.now();
+  const cacheKey = options.cacheKey ?? null;
+  const finalKey = cacheKey ? `${path}::${cacheKey}` : path;
 
   // memory cache
-  const cached = memoryCache.get(path);
+  const cached = memoryCache.get(finalKey);
   if (cached && now - cached.timestamp < CACHE_TTL) {
     lastFetchTime = cached.fetchedAt; // reuse previous time label
     return cached.data as T;
@@ -141,12 +148,13 @@ export async function get<T>(path: string): Promise<T> {
 
       lastFetchTime = fetchedAtLabel;
 
-      memoryCache.set(path, {
+      memoryCache.set(finalKey, {
         timestamp: now,
         data: json,
         fetchedAt: fetchedAtLabel,
+        cacheKey,
       });
-      saveToLocalStorage(path, json, fetchedAtMs);
+      saveToLocalStorage(finalKey, json, fetchedAtMs);
 
       return json;
     }
@@ -161,7 +169,7 @@ export async function get<T>(path: string): Promise<T> {
     const { message, payload } = await parseErrorBody(res);
     console.error("Server error:", res.status, message);
 
-    const offline = loadOfflineCache(path);
+    const offline = loadOfflineCache(finalKey);
     if (offline) {
       lastFetchTime = new Date(offline.savedAt).toLocaleTimeString([], {
         hour: "2-digit",
@@ -179,7 +187,7 @@ export async function get<T>(path: string): Promise<T> {
     // Network / unexpected error - try offline
     console.error("Network or unexpected error for GET", path, err);
 
-    const offline = loadOfflineCache(path);
+    const offline = loadOfflineCache(finalKey);
     if (offline) {
       lastFetchTime = new Date(offline.savedAt).toLocaleTimeString([], {
         hour: "2-digit",
