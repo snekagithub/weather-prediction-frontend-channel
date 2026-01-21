@@ -212,7 +212,7 @@ export async function post<T>(path: string, body: any): Promise<T> {
       method: "POST",
       headers: {
           "content-type": "application/json",
-          "transactionid": crypto.randomUUID(),
+          "transactionId": crypto.randomUUID(),
           "x-client-id": "weather-prediction-manager-ui-channel",
           "x-client-secret": "WX-APP-2025"
       },
