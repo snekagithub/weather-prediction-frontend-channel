@@ -128,7 +128,7 @@ export async function get<T>(path: string, options: GetOptions = {}): Promise<T>
   const url = `${API_BASE}${path}`;
   const headers = {
           "content-type": "application/json",
-          "transactionid": crypto.randomUUID(),
+          "transactionId": crypto.randomUUID(),
           "x-client-id": "weather-prediction-manager-ui-channel",
           "x-client-secret": "WX-APP-2025"
       };
