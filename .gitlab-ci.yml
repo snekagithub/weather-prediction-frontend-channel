@@ -1,0 +1,30 @@
+image: node:20
+stages:
+  - build
+  - deploy
+
+variables:
+  S3_BUCKET: weather-prediction-frontend-channel
+  CLOUDFRONT_DIST_ID: xxxxxxxxxxxx
+
+cache:
+  paths:
+    - node_modules/
+
+build:
+  stage: build
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+
+deploy:
+  stage: deploy
+  image:
+    name: amazon/aws-cli
+    entrypoint: [""]  
+  script:
+    - aws s3 sync dist/ s3://$S3_BUCKET --delete
+    - aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DIST_ID --paths "/*"
